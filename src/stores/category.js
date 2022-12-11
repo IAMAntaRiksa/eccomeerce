@@ -12,7 +12,6 @@ export const useCategoryStore = defineStore('category', {
         async getCategoriesHeader() {
             try {
                 const { data } = await Api.get('/v1/categoryHeader')
-
                 this.categoryHeader = data.categories
             } catch (error) {
                 console.log(error)

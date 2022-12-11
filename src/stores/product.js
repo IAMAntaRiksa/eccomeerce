@@ -4,6 +4,7 @@ import Api from '../api/api'
 export const useProductStore = defineStore('product', {
     state: () => ({
         products: [],
+        product: {}
     }),
 
     actions: {
@@ -14,10 +15,19 @@ export const useProductStore = defineStore('product', {
             } catch (error) {
                 console.log(error)
             }
+        },
+        async getDetailProduct(slug) {
+            try {
+                const { data } = await Api.get(`/v1/products/${slug}`)
+                this.product = data.data
+            } catch (error) {
+                console.log(error)
+            }
         }
     },
 
     getters: {
-        getProducts: (state) => state.products
+        getterProducts: (state) => state.products,
+        getterDetailProduct: (state) => state.product
     }
 })

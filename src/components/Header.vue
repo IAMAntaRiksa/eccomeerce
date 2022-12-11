@@ -29,10 +29,16 @@
                                 </a>
                             </div>
                             <div class="account">
-                                <a href="" class="btn search-button btn-md d-none d-md-block ml-4">
+                                <router-link :to="{ name: 'login' }" v-if="!isLoggedIn"
+                                    class="btn search-button btn-md d-none d-md-block ml-4">
                                     <i class="fa fa-user-circle"></i>
-                                    ACCOUNT
-                                </a>
+                                    Account
+                                </router-link>
+                                <router-link :to="{ name: 'dashboard' }" v-else
+                                    class="btn search-button btn-md d-none d-md-block ml-4">
+                                    <i class="fa fa-user-circle"></i>
+                                    Dashboard
+                                </router-link>
                             </div>
                         </div>
                     </div>
@@ -41,3 +47,25 @@
         </section>
     </header>
 </template>
+
+
+<script>
+import { computed, defineComponent, onMounted } from 'vue'
+import { useAuthStore } from '../stores/auth';
+
+export default defineComponent({
+    setup() {
+
+        const store = useAuthStore()
+
+        const isLoggedIn = computed(() => {
+            return store.iUser
+        })
+
+        return {
+            isLoggedIn
+        }
+    },
+})
+</script>
+
