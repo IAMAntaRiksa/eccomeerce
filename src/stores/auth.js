@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import Api from '../api/api'
+import { useCartStore } from '@/stores/cart'
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -27,6 +28,9 @@ export const useAuthStore = defineStore('auth', {
 
         logout() {
             const token = localStorage.getItem('token')
+
+            const store = useCartStore()
+
             Api.post('logout', {}, {
                 headers: {
                     Authorization: 'Bearer' + token
@@ -34,15 +38,24 @@ export const useAuthStore = defineStore('auth', {
             }).then(() => {
                 localStorage.removeItem('token')
                 localStorage.removeItem('user')
+
+                store.carts = 0
+
                 this.token = ''
             })
         },
 
         login(credential) {
+            const store = useCartStore()
+
             return new Promise((resolve, reject) => {
                 Api.post('login', credential).then((response) => {
+
                     localStorage.setItem('token', response.data.data.token)
                     localStorage.setItem('user', JSON.stringify(response.data.data.user))
+
+                    store.cartCount()
+
                     resolve()
                 }).catch((error) => {
                     reject(error.response.data)

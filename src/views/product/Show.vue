@@ -66,15 +66,20 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted } from 'vue'
+import { computed, defineComponent, onMounted, reactive } from 'vue'
 import { useProductStore } from '@/stores/product';
-import { useRoute } from 'vue-router';
+import { useCartStore } from '@/stores/cart';
+import { useRoute, useRouter } from 'vue-router';
+import { useAuthStore } from '../../stores/auth';
 
 export default defineComponent({
     setup() {
-
         const store = useProductStore()
+        const useAuth = useAuthStore()
+        const addProdct = useCartStore()
         const route = useRoute()
+        const router = useRouter()
+
         onMounted(() => {
             store.getDetailProduct(route.params.slug)
         })
@@ -83,8 +88,26 @@ export default defineComponent({
             return store.getterDetailProduct
         })
 
+        // product add to cart
+        function addCart(product_id, price, weight) {
+            // check token
+            const token = useAuth.token
+
+            if (!token) {
+                return router.push({ name: 'login' })
+            }
+            //panggil action addToCart di module cart
+            addProdct.storeCart({
+                product_id: product_id,
+                price: price,
+                weight: weight,
+                qty: 1
+            })
+
+        }
         return {
-            detailProduct
+            detailProduct,
+            addCart
         }
     },
 })
