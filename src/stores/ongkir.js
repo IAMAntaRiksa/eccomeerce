@@ -34,7 +34,6 @@ export const useOngkirStore = defineStore('ongkir', {
                         Authorization: 'Bearer' + token
                     }
                 }).then((response) => {
-                    console.log(response.data)
                     this.cities = response.data
                     resolve()
                 }).catch((error) => {

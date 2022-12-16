@@ -23,7 +23,7 @@
                     <div class="col-md-4 col-5">
                         <div class="d-flex justify-content-end">
                             <div class="cart-header">
-                                <router-link :to="{ name: 'cart' }" class="btn search-button btn-md" @click="check()"
+                                <router-link :to="{ name: 'cart' }" class="btn search-button btn-md"
                                     style="color: #ffffff;background-color: #6677ef;border-color: #ffffff;"><i
                                         class="fa fa-shopping-cart"></i>{{ cartCount }}
                                 </router-link>
@@ -50,8 +50,7 @@
 
 
 <script>
-import { computed, defineComponent } from 'vue'
-import { useRouter } from 'vue-router';
+import { computed, defineComponent, onMounted } from 'vue'
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
 export default defineComponent({
@@ -59,26 +58,25 @@ export default defineComponent({
 
         const store = useAuthStore()
         const cartStore = useCartStore()
-        const router = useRouter()
+
 
         const cartCount = computed(() => {
             return cartStore.contGetter
         })
 
-        function check() {
+        onMounted(() => {
             const token = store.token
             if (!token) {
-                return router.push({ name: 'login' })
+                return
             }
             cartStore.cartCount()
-        }
+        })
         const isLoggedIn = computed(() => {
             return store.iUser
         })
         return {
             isLoggedIn,
             cartCount,
-            check
         }
     },
 })

@@ -53,7 +53,7 @@
                                     </td>
                                     <td class="set-td text-right" width="30%">&nbsp; : Rp.</td>
                                     <td class="text-right set-td ">
-                                        <p class="m-0" id="subtotal"> {{ cartTotal }}
+                                        <p class="m-0" id="subtotal"> {{ moneyFormat(cartTotal) }}
                                         </p>
                                     </td>
                                 </tr>
@@ -65,7 +65,8 @@
                                     <td class="set-td border-0 text-right">&nbsp; : Rp.</td>
                                     <td class="set-td border-0 text- right">
                                         <p class="m-0" id="ongkir-cart " align="right">
-                                            0</p>
+                                            {{ moneyFormat(state.cost_courier) }}
+                                        </p>
                                     </td>
                                 </tr>
                                 <tr>
@@ -75,7 +76,7 @@
                                     <td class=" border-0 text-right">&nbsp; : Rp.</td>
                                     <td class=" border-0 text-right">
                                         <p class="font-weight-bold m-0  h5" align="right">
-                                            0
+                                            {{ moneyFormat(state.grand_total) }}
                                         </p>
                                     </td>
                                 </tr>
@@ -99,7 +100,7 @@
                                     <label class="font-weight-bold">NAMA LENGKAP</label>
                                     <input type="text" class="form-control" id="nama_lengkap" placeholder="Nama Lengkap"
                                         v-model="state.name">
-                                    <div class="mt-2 alert alert-danger">
+                                    <div v-if="validation.name" class="mt-2 alert alert-danger">
                                         Masukkan Nama Lengkap
                                     </div>
                                 </div>
@@ -110,7 +111,7 @@
                                     <label class="font-weight-bold">NO. HP / WHATSAPP</label>
                                     <input type="number" class="form-control" id="phone" placeholder="No. HP / WhatsApp"
                                         v-model="state.phone">
-                                    <div class="mt-2 alert alert-danger">
+                                    <div v-if="validation.phone" class="mt-2 alert alert-danger">
                                         Masukkan No. Telp
                                     </div>
                                 </div>
@@ -132,7 +133,7 @@
                             <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="font-weight-bold">KOTA / KABUPATEN</label>
-                                    <select class="form-control" v-model="state.city_id">
+                                    <select class="form-control" v-model="state.city_id" @change="getCourier">
                                         <option value="">-- pilih kota --</option>
                                         <option v-for="city in cities" :key="city.id" :value="city.city_id">
                                             {{ city.name }}
@@ -141,7 +142,7 @@
                                 </div>
                             </div>
 
-                            <!-- <div class="col-md-12">
+                            <div class="col-md-12">
                                 <div class="form-group" v-if="state.courier">
                                     <label class="font-weight-bold">KURIR PENGIRIMAN</label>
                                     <br>
@@ -163,9 +164,9 @@
                                             for="ongkos_kirim-jnt">POS</label>
                                     </div>
                                 </div>
-                            </div> -->
+                            </div>
 
-                            <!-- <div class="col-md-12">
+                            <div class="col-md-12">
                                 <div class="form-group" v-if="state.cost">
                                     <hr>
                                     <label class="font-weight-bold">SERVICE KURIR</label>
@@ -179,9 +180,9 @@
                                             {{ value.service }} - Rp. {{ moneyFormat(value.cost[0].value) }}</label>
                                     </div>
                                 </div>
-                            </div> -->
+                            </div>
 
-                            <!-- <div class="col-md-12">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="font-weight-bold">ALAMAT LENGKAP</label>
                                     <textarea class="form-control" id="alamat" rows="3"
@@ -196,7 +197,7 @@
                             <div v-if="state.buttonCheckout" class="col-md-12">
                                 <button @click.prevent="checkOut"
                                     class="btn btn-primary btn-lg btn-block">CHECKOUT</button>
-                            </div> -->
+                            </div>
 
                         </div>
 
@@ -232,9 +233,15 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, reactive } from 'vue'
+import { computed, defineComponent, onMounted, reactive, ref } from 'vue'
 import { useCartStore } from '../../stores/cart'
 import { useOngkirStore } from '../../stores/ongkir'
+import Api from '../../api/api';
+import { useAuthStore } from '../../stores/auth';
+import { useCheckoutStore } from '../../stores/checkout';
+import { useRouter } from 'vue-router';
+
+
 export default defineComponent({
     setup() {
 
@@ -242,10 +249,13 @@ export default defineComponent({
             name: '',     // <-- state name
             phone: '',     // <-- state phone  
             address: '',     // <-- state address  
+
             province_id: '',     // <-- state ID province
             city_id: '',     // <-- state ID City
+
             courier: false,  // <-- state pilihan kurir
             courier_type: '',     // <-- state jenis kurir 
+
             cost: false,  // <-- state cost kurir
             costs: '',     // <-- state costs kurir
             costService: '',     // <-- state get data cost dan service pengiriman
@@ -254,9 +264,17 @@ export default defineComponent({
             buttonCheckout: false,  // <-- state button checkout 
             grand_total: 0       // <-- state untuk grand total 
         })
+        const validation = ref({
+            name: false, // <-- validation name
+            phone: false, // <-- validation phone
+            address: false  // <-- validation address 
+        })
 
         const store = useCartStore()
         const storeOngkir = useOngkirStore()
+        const useAuth = useAuthStore()
+        const useCheckout = useCheckoutStore()
+        const router = useRouter()
 
         onMounted(() => {
             store.cartCount()
@@ -288,8 +306,8 @@ export default defineComponent({
             return storeOngkir.citieGetter
         })
 
-        async function getCities(province_id) {
-            await storeOngkir.getCitiesData({
+        function getCities(province_id) {
+            storeOngkir.getCitiesData({
                 province_id: province_id
             })
         }
@@ -298,15 +316,109 @@ export default defineComponent({
                 cart_id: cart_id
             })
         }
+
+        //fungsi menampilkan pilihan courier
+        function getCourier() {
+            state.courier = true
+        }
+
+        //fungsi untuk mendapatkan biaya ongkos kirim
+        async function getOngkir() {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await Api.post('/rajaongkir/checkOngkir', {
+                    destination: state.city_id,
+                    weight: cartWeight.value,
+                    courier: state.courier_type,
+                }, {
+                    headers: {
+                        Authorization: 'Bearer' + token
+                    }
+                });
+
+                state.cost = true
+                state.costs = response.data.costs
+
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        function getCostService() {
+
+            let shipping = state.costService.split("|")
+
+            //set state cost dan service
+            state.cost_courier = shipping[0]
+            state.courier_service = shipping[1]
+
+            //hitung grandrotal
+            const token = localStorage.getItem('token')
+            Api.defaults.headers.common['Authorization'] = "Bearer" + token
+
+            Api.get('/cart/total')
+                .then(response => {
+                    //jumlahkan total cart dan cost pengiriman 
+                    state.grand_total = parseInt(response.data.total) + parseInt(state.cost_courier)
+
+                    //show button checkout
+                    state.buttonCheckout = true
+                })
+
+        }
+        function checkOut() {
+
+            if (state.name && state.phone && state.address && cartWeight.value) {
+                let formData = new FormData();
+
+                formData.append('courier', state.courier_type)
+                formData.append('service', state.courier_service)
+                formData.append('cost_courier', state.cost_courier)
+                formData.append('weight', cartWeight.value)
+                formData.append('name', state.name)
+                formData.append('phone', state.phone)
+                formData.append('city_id', state.city_id)
+                formData.append('province_id', state.province_id)
+                formData.append('address', state.address)
+                formData.append('grand_total', state.grand_total)
+
+                useCheckout.storeCheckout(formData).then((response) => {
+                    router.push({
+                        name: 'detail_order',
+                        params: {
+                            snap_token: response.snap_token
+                        }
+                    })
+                })
+
+            }
+            // check validasi name
+            if (!state.name) {
+                validation.value.name = true
+            }
+            //check validasi phone
+            if (!state.phone) {
+                validation.value.phone = true
+            }
+            //check validasi address
+            if (!state.address) {
+                validation.value.address = true
+            }
+        }
         return {
             state,
+            validation,
             carts,
             cartTotal,
             cartWeight,
             removeCart,
             provinces,
             cities,
-            getCities
+            getCities,
+            getCourier,
+            getOngkir,
+            getCostService,
+            checkOut
         }
     },
 })

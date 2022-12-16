@@ -6,10 +6,9 @@ export const useAuthStore = defineStore('auth', {
     state: () => ({
         token: localStorage.getItem('token') || "",
     }),
-
     getters: {
         iUser: (state) => state.token,
-        // isLoggedIn: (state) => state.token !== false
+        isLoggedIn: (state) => state.token != false
     },
     actions: {
         async getUser() {
@@ -26,23 +25,23 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
-        logout() {
+        async logout() {
             const token = localStorage.getItem('token')
-
             const store = useCartStore()
+            return new Promise((resolve, reject) => {
+                Api.post('logout', {}, {
+                    headers: {
+                        Authorization: 'Bearer' + token
+                    }
+                }).then(() => {
+                    localStorage.removeItem('token')
+                    localStorage.removeItem('user')
+                    store.carts = 0
+                    this.token = ""
+                })
 
-            Api.post('logout', {}, {
-                headers: {
-                    Authorization: 'Bearer' + token
-                }
-            }).then(() => {
-                localStorage.removeItem('token')
-                localStorage.removeItem('user')
-
-                store.carts = 0
-
-                this.token = ''
-            })
+                resolve()
+            });
         },
 
         login(credential) {
@@ -55,7 +54,7 @@ export const useAuthStore = defineStore('auth', {
                     localStorage.setItem('user', JSON.stringify(response.data.data.user))
 
                     store.cartCount()
-
+                    this.token = true
                     resolve()
                 }).catch((error) => {
                     reject(error.response.data)

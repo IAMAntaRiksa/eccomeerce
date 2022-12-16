@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import { computed, defineComponent, onMounted, reactive } from 'vue'
+import { computed, defineComponent, onMounted } from 'vue'
 import { useProductStore } from '@/stores/product';
 import { useCartStore } from '@/stores/cart';
 import { useRoute, useRouter } from 'vue-router';
@@ -74,6 +74,7 @@ import { useAuthStore } from '../../stores/auth';
 
 export default defineComponent({
     setup() {
+
         const store = useProductStore()
         const useAuth = useAuthStore()
         const addProdct = useCartStore()
@@ -87,7 +88,6 @@ export default defineComponent({
         const detailProduct = computed(() => {
             return store.getterDetailProduct
         })
-
         // product add to cart
         function addCart(product_id, price, weight) {
             // check token
@@ -103,7 +103,6 @@ export default defineComponent({
                 weight: weight,
                 qty: 1
             })
-
         }
         return {
             detailProduct,

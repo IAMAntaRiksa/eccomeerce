@@ -87,6 +87,8 @@ export const useCartStore = defineStore('cart', {
                     }
                 }).then(() => {
                     this.cartCount()
+                    this.cartTotals()
+                    this.cartWeights()
                     resolve()
                 }).catch((err) => {
                     reject(err)
